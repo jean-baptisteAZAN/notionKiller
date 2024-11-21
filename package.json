@@ -1,0 +1,11 @@
+{
+  "name": "notionkiller",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": ["apps/*"],
+  "scripts": {
+    "dev:frontend": "cd apps/frontend && bun dev",
+    "dev:backend": "cd apps/backend && bun dev",
+    "build:shared": "cd apps/shared && bun build"
+  }
+}

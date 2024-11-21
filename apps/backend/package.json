@@ -1,0 +1,17 @@
+{
+  "name": "@notionkiller/backend",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@notionkiller/shared": "workspace:*",
+    "@elysiajs/cors": "^1.1.1",
+    "elysia": "^1.1.25",
+    "postgres": "^3.4.5"
+  }
+}
