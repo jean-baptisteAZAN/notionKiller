@@ -1,17 +1,19 @@
 {
-  "name": "@notionkiller/backend",
-  "module": "index.ts",
-  "type": "module",
-  "devDependencies": {
-    "@types/bun": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "^5.0.0"
+  "name": "backend",
+  "scripts": {
+    "dev": "bun run --hot src/index.ts"
   },
   "dependencies": {
-    "@notionkiller/shared": "workspace:*",
-    "@elysiajs/cors": "^1.1.1",
-    "elysia": "^1.1.25",
-    "postgres": "^3.4.5"
+    "@hono/node-server": "^1.13.7",
+    "bcrypt": "^5.1.1",
+    "hono": "^4.6.11",
+    "jsonwebtoken": "^9.0.2",
+    "postgres": "^3.4.5",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/bun": "latest",
+    "@types/jsonwebtoken": "^9.0.7"
   }
 }
