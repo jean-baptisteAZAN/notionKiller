@@ -1,8 +1,8 @@
 export interface Document {
-    id: string
-    title: string
-    content: string
-    userId: number
-    createdAt: string
-    updatedAt: string
+  id: string;
+  title: string;
+  content: string;
+  userId: number;
+  createdAt: string;
+  updatedAt: string;
 }
