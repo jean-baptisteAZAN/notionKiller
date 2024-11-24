@@ -1,37 +1,37 @@
 <script setup lang="ts">
-import type { Document } from "@/types/document";
+  import type { Document } from "@notionkiller/shared/types";
+  import { formatDate } from "@/utils/formatDate";
 
-defineProps<{
-  document: Document;
-  isEditing: boolean;
-  hasUnsavedChanges: boolean;
-}>();
+  defineProps<{
+    document: Document;
+    isEditing: boolean;
+    hasUnsavedChanges: boolean;
+  }>();
 
-defineEmits<{
-  edit: [];
-  cancel: [];
-  save: [];
-  delete: [];
-  duplicate: [];
-  rename: [string];
-  export: [];
-}>();
+  const emit = defineEmits<{
+    edit: [];
+    cancel: [];
+    save: [];
+    delete: [];
+    duplicate: [];
+    rename: [string];
+    export: [{ format: "markdown" | "html" | "txt" }];
+  }>();
 
-const showRenameModal = ref(false);
-const newTitle = ref("");
+  const showRenameModal = ref(false);
+  const showExportModal = ref(false);
+  const newTitle = ref("");
 
-// Pour le modal de renommage
-function handleRename() {
-  emit("rename", newTitle.value);
-  showRenameModal.value = false;
-  newTitle.value = "";
-}
+  function handleRename() {
+    emit("rename", newTitle.value);
+    showRenameModal.value = false;
+    newTitle.value = "";
+  }
 
-// Pour l'export
-function handleExport() {
-  // Logic to trigger export
-  emit("export");
-}
+  function handleExportFormat(format: "markdown" | "html" | "txt") {
+    emit("export", { format });
+    showExportModal.value = false;
+  }
 </script>
 
 <template>
@@ -61,7 +61,7 @@ function handleExport() {
         </h1>
         <p class="text-sm text-gray-500 flex items-center gap-2">
           <UIcon name="i-heroicons-clock" class="w-4 h-4" />
-          Last edited {{ new Date(document.updatedAt).toLocaleString() }}
+          Last edited {{ formatDate(document.updated_at) }}
         </p>
       </div>
     </div>
@@ -103,6 +103,16 @@ function handleExport() {
           icon="i-heroicons-pencil"
           @click="$emit('edit')"
         />
+        <UButton
+          color="gray"
+          variant="ghost"
+          icon="i-heroicons-moon"
+          class="hidden sm:flex"
+          @click="
+            $colorMode.preference =
+              $colorMode.value === 'dark' ? 'light' : 'dark'
+          "
+        />
       </template>
 
       <UDropdown
@@ -118,28 +128,10 @@ function handleExport() {
               icon: 'i-heroicons-pencil-square',
               click: () => (showRenameModal = true),
             },
-          ],
-          [
             {
-              label: 'Export as...',
+              label: 'Export',
               icon: 'i-heroicons-arrow-down-tray',
-              children: [
-                {
-                  label: 'Markdown (.md)',
-                  icon: 'i-heroicons-document-text',
-                  click: () => $emit('export', { format: 'markdown' }),
-                },
-                {
-                  label: 'HTML (.html)',
-                  icon: 'i-heroicons-code-bracket',
-                  click: () => $emit('export', { format: 'html' }),
-                },
-                {
-                  label: 'Plain Text (.txt)',
-                  icon: 'i-heroicons-document',
-                  click: () => $emit('export', { format: 'txt' }),
-                },
-              ],
+              click: () => (showExportModal = true),
             },
           ],
           [
@@ -200,6 +192,58 @@ function handleExport() {
             />
           </div>
         </template>
+      </UCard>
+    </UModal>
+    <UModal v-model="showExportModal">
+      <UCard>
+        <template #header>
+          <div class="flex justify-between items-center">
+            <h3 class="text-lg font-medium">Export Document</h3>
+            <UButton
+              color="gray"
+              variant="ghost"
+              icon="i-heroicons-x-mark"
+              @click="showExportModal = false"
+            />
+          </div>
+        </template>
+
+        <div class="space-y-4 py-4">
+          <div class="grid gap-2">
+            <UButton
+              variant="ghost"
+              class="justify-start"
+              @click="handleExportFormat('markdown')"
+            >
+              <template #leading>
+                <UIcon name="i-heroicons-document-text" />
+              </template>
+              Markdown (.md)
+            </UButton>
+
+            <UButton
+              variant="ghost"
+              class="justify-start"
+              @click="handleExportFormat('html')"
+            >
+              <template #leading>
+                <UIcon name="i-heroicons-code-bracket" />
+              </template>
+              HTML (.html)
+            </UButton>
+
+            <UButton
+              variant="ghost"
+              class="justify-start"
+              @click="handleExportFormat('txt')"
+            >
+              <template #leading>
+                <UIcon name="i-heroicons-document" />
+              </template>
+              Plain Text (.txt)
+            </UButton>
+          </div>
+        </div>
       </UCard>
     </UModal>
   </div>

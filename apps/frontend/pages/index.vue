@@ -251,7 +251,6 @@ const stats = [
     </div>
   </section>
 
-  <!-- Stats Section -->
   <section class="relative py-20 overflow-hidden">
     <!-- Background Pattern -->
     <div class="absolute inset-0 opacity-25 dark:opacity-10">
@@ -292,7 +291,6 @@ const stats = [
     </div>
   </section>
 
-  <!-- CTA Section -->
   <section class="py-24 relative overflow-hidden">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="relative">
@@ -344,7 +342,6 @@ const stats = [
 </template>
 
 <style scoped>
-/* Animation des blobs */
 @keyframes blob {
   0% {
     transform: translate(0px, 0px) scale(1);
@@ -360,19 +357,6 @@ const stats = [
   }
 }
 
-.animate-blob {
-  animation: blob 7s infinite;
-}
-
-.animation-delay-2000 {
-  animation-delay: 2s;
-}
-
-.animation-delay-4000 {
-  animation-delay: 4s;
-}
-
-/* Animation du curseur de typing */
 @keyframes blink {
   0%,
   100% {
@@ -393,17 +377,7 @@ const stats = [
   display: inline-block;
   min-width: 10px;
 }
-/* Ajout d'animations pour les features */
-.feature-card {
-  transform-style: preserve-3d;
-  perspective: 1000px;
-}
 
-.feature-card:hover {
-  transform: translateY(-5px);
-}
-
-/* Animation pour les stats */
 @keyframes countUp {
   from {
     transform: translateY(20px);
@@ -413,9 +387,5 @@ const stats = [
     transform: translateY(0);
     opacity: 1;
   }
-}
-
-.stat-number {
-  animation: countUp 1s ease-out forwards;
 }
 </style>

@@ -1,147 +1,148 @@
 <script setup lang="ts">
-import { useDocument } from "@/composables/useDocument";
-import { useMarkdown } from "@/composables/useMarkdown";
-import { useAutoSave } from "@/composables/useAutoSave";
-import { useNotifications } from "@/composables/useNotifications";
-import { useConfirm } from "@/composables/useConfirm";
-import {
-  duplicateDocument,
-  renameDocument,
-  exportDocument,
-} from "@/utils/docsOperations";
-import DocumentEditor from "@/components/documents/index.vue";
-import MarkdownPreview from "~/components/documents/MarkdownPreview.vue";
+  import { useDocument } from "@/composables/useDocument";
+  import { useMarkdown } from "@/composables/useMarkdown";
+  import { useAutoSave } from "@/composables/useAutoSave";
+  import { useNotifications } from "@/composables/useNotifications";
+  import { useConfirm } from "@/composables/useConfirm";
+  import {
+    duplicateDocument,
+    renameDocument,
+    exportDocument,
+  } from "@/utils/docsOperations";
+  import DocumentEditor from "@/components/documents/index.vue";
+  import MarkdownPreview from "~/components/documents/MarkdownPreview.vue";
 
-const route = useRoute();
-const router = useRouter();
-const documentId = route.params.id as string;
+  const route = useRoute();
+  const router = useRouter();
+  const documentId = route.params.id as string;
 
-const { notifySuccess, notifyError } = useNotifications();
-const { document, isLoading, fetchDocument, saveDocument, deleteDocument } =
-  useDocument(documentId);
+  const { notifySuccess, notifyError } = useNotifications();
+  const { document, isLoading, fetchDocument, saveDocument, deleteDocument } =
+    useDocument(documentId);
 
-const { editedContent, renderedMarkdown, insertMarkdown } = useMarkdown();
+  const { editedContent, renderedMarkdown, insertMarkdown } = useMarkdown();
 
-const { hasUnsavedChanges, debouncedSave } = useAutoSave(saveDocument);
+  const { hasUnsavedChanges, debouncedSave } = useAutoSave(saveDocument);
 
-const isEditing = ref(false);
+  const isEditing = ref(false);
 
-watch(
-  () => document.value?.content,
-  (newContent) => {
-    if (newContent !== undefined) {
-      editedContent.value = newContent;
+  watch(
+    () => document.value?.content,
+    (newContent) => {
+      if (newContent !== undefined) {
+        editedContent.value = newContent;
+      }
+    },
+    { immediate: true },
+  );
+
+  watch(editedContent, (newContent) => {
+    hasUnsavedChanges.value = true;
+    debouncedSave(newContent);
+  });
+
+  const isEditingCookie = useCookie("document-editing-state");
+  onMounted(() => {
+    if (isEditingCookie.value === "true") {
+      isEditing.value = true;
     }
-  },
-  { immediate: true },
-);
+  });
 
-watch(editedContent, (newContent) => {
-  hasUnsavedChanges.value = true;
-  debouncedSave(newContent);
-});
+  watch(isEditing, (newValue) => {
+    isEditingCookie.value = newValue ? "true" : "false";
+  });
 
-const isEditingCookie = useCookie("document-editing-state");
-onMounted(() => {
-  if (isEditingCookie.value === "true") {
-    isEditing.value = true;
-  }
-});
-
-watch(isEditing, (newValue) => {
-  isEditingCookie.value = newValue ? "true" : "false";
-});
-
-async function handleSave() {
-  try {
-    await saveDocument(editedContent.value);
-    isEditing.value = false;
-    notifySuccess("Document saved successfully");
-  } catch (error) {
-    notifyError("Failed to save document");
-  }
-}
-
-async function handleDelete() {
-  const confirmDialog = useConfirm();
-
-  try {
-    const confirmed = await confirmDialog.confirm({
-      title: "Delete Document",
-      message:
-        "Are you sure you want to delete this document? This action cannot be undone.",
-      confirmLabel: "Delete",
-      cancelLabel: "Cancel",
-      confirmButtonColor: "red",
-    });
-
-    if (confirmed) {
-      await deleteDocument();
-      notifySuccess("Document deleted successfully");
-      navigateTo("/dashboard");
+  async function handleSave() {
+    try {
+      await saveDocument(editedContent.value);
+      isEditing.value = false;
+      notifySuccess("Document saved successfully");
+    } catch (error) {
+      notifyError("Failed to save document");
     }
-  } catch (error) {
-    notifyError("Failed to delete document");
   }
-}
 
-async function handleDuplicate() {
-  try {
-    if (!document.value) return;
-    const { success, data } = await duplicateDocument(document.value);
-    if (success && data) {
-      notifySuccess("Document duplicated successfully");
-      navigateTo(`/document/${data.id}`);
+  async function handleDelete() {
+    const confirmDialog = useConfirm();
+
+    try {
+      const confirmed = await confirmDialog.confirm({
+        title: "Delete Document",
+        message:
+          "Are you sure you want to delete this document? This action cannot be undone.",
+        confirmLabel: "Delete",
+        cancelLabel: "Cancel",
+        confirmButtonColor: "red",
+      });
+
+      if (confirmed) {
+        await deleteDocument();
+        notifySuccess("Document deleted successfully");
+        navigateTo("/dashboard");
+      }
+    } catch (error) {
+      notifyError("Failed to delete document");
     }
-  } catch (error) {
-    notifyError("Failed to duplicate document");
   }
-}
 
-async function handleRename(newTitle: string) {
-  try {
-    const { success } = await renameDocument(documentId, newTitle);
-    if (success) {
-      await fetchDocument(); // Recharger le document pour mettre à jour le titre
-      notifySuccess("Document renamed successfully");
+  async function handleDuplicate() {
+    try {
+      if (!document.value) return;
+      const { success, data } = await duplicateDocument(document.value);
+      if (success && data) {
+        notifySuccess("Document duplicated successfully");
+        navigateTo(`/document/${data.id}`);
+      }
+    } catch (error) {
+      notifyError("Failed to duplicate document");
     }
-  } catch (error) {
-    notifyError("Failed to rename document");
   }
-}
 
-async function handleExport(options = { format: "markdown" as const }) {
-  try {
-    if (!document.value) return;
-
-    const result = await exportDocument(document.value, {
-      ...options,
-      includeMetadata: true,
-    });
-
-    if (result.success) {
-      notifySuccess(`Document exported successfully as ${result.format}`);
+  async function handleRename(newTitle: string) {
+    try {
+      const { success } = await renameDocument(documentId, newTitle);
+      if (success) {
+        await fetchDocument(); // Recharger le document pour mettre à jour le titre
+        notifySuccess("Document renamed successfully");
+      }
+    } catch (error) {
+      notifyError("Failed to rename document");
     }
-  } catch (error) {
-    notifyError(`Failed to export document: ${error.message}`);
   }
-}
 
-function handleInsertMarkdown(
-  prefix: string,
-  suffix: string,
-  placeholder: string,
-) {
-  insertMarkdown(prefix, suffix, placeholder);
-}
+  async function handleExport(options: { format: "markdown" | "html" | "txt" }) {
+    try {
+      if (!document.value) return;
 
-// Initialisation
-onMounted(async () => {
-  await fetchDocument();
-  if (document.value?.content) {
-    editedContent.value = document.value.content;
+      const result = await exportDocument(document.value, {
+        format: options.format,
+        includeMetadata: true,
+      });
+
+      if (result.success) {
+        notifySuccess(
+          `Document exported successfully as ${options.format.toUpperCase()}`,
+        );
+      }
+    } catch (error) {
+      notifyError(`Failed to export document: ${error.message}`);
+    }
   }
-});
+
+  function handleInsertMarkdown(
+    prefix: string,
+    suffix: string,
+    placeholder: string,
+  ) {
+    insertMarkdown(prefix, suffix, placeholder);
+  }
+
+  onMounted(async () => {
+    await fetchDocument();
+    if (document.value?.content) {
+      editedContent.value = document.value.content;
+    }
+  });
 </script>
 
 <template>
@@ -160,7 +161,7 @@ onMounted(async () => {
           @delete="handleDelete"
           @duplicate="handleDuplicate"
           @rename="handleRename"
-          @export="handleExport"
+          @export="(options) => handleExport(options)"
         />
 
         <DocumentEditor

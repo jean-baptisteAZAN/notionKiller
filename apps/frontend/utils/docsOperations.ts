@@ -1,4 +1,5 @@
-import type { Document } from "@/types/document";
+import type { Document } from "@notionkiller/shared/types";
+import MarkdownIt from "markdown-it";
 
 type ExportFormat = "markdown" | "pdf" | "html" | "txt";
 
@@ -49,6 +50,7 @@ export async function renameDocument(id: string, newTitle: string) {
   }
 }
 
+// utils/docsOperations.ts
 export async function exportDocument(
   doc: Document,
   options: ExportOptions = { format: "markdown" },
@@ -64,8 +66,8 @@ export async function exportDocument(
     const metadata = [
       `---`,
       `title: ${doc.title}`,
-      `created: ${new Date(doc.createdAt).toISOString()}`,
-      `updated: ${new Date(doc.updatedAt).toISOString()}`,
+      `created: ${doc.created_at}`,
+      `updated: ${doc.updated_at}`,
       `---\n\n`,
     ].join("\n");
     content = metadata + doc.content;
@@ -80,23 +82,23 @@ export async function exportDocument(
       break;
 
     case "txt":
-      // Convertir le markdown en texte simple (option basique)
       content = content
-        .replace(/#{1,6}\s/g, "") // Enlever les #
-        .replace(/\*\*/g, "") // Enlever les **
-        .replace(/\*/g, "") // Enlever les *
-        .replace(/`{3}[\s\S]*?`{3}/g, ""); // Enlever les blocs de code
+        .replace(/#{1,6}\s/g, "")
+        .replace(/\*\*/g, "")
+        .replace(/\*/g, "")
+        .replace(/`{3}[\s\S]*?`{3}/g, "");
       mimeType = "text/plain";
       extension = "txt";
       break;
 
     case "html":
-      // Utiliser markdown-it pour convertir en HTML
       const md = new MarkdownIt({
         html: true,
         linkify: true,
         typographer: true,
       });
+
+      const formattedDate = new Date(doc.updated_at).toLocaleString();
 
       content = `
         <!DOCTYPE html>
@@ -104,6 +106,8 @@ export async function exportDocument(
         <head>
           <meta charset="UTF-8">
           <title>${doc.title}</title>
+          <meta name="created" content="${doc.created_at}">
+          <meta name="updated" content="${doc.updated_at}">
           <style>
             body {
               max-width: 800px;
@@ -120,13 +124,22 @@ export async function exportDocument(
             img {
               max-width: 100%;
             }
+            .metadata {
+              color: #666;
+              font-size: 0.9em;
+              margin-bottom: 2em;
+            }
           </style>
         </head>
         <body>
+          <h1>${doc.title}</h1>
+          <div class="metadata">
+            Last updated: ${formattedDate}
+          </div>
           ${md.render(doc.content)}
         </body>
         </html>
-      `;
+      `.trim();
       mimeType = "text/html";
       extension = "html";
       break;
@@ -134,25 +147,29 @@ export async function exportDocument(
     default:
       throw new Error(`Unsupported format: ${format}`);
   }
-  const blob = new Blob([content], { type: mimeType });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `${fileName.replace(/[^a-z0-9]/gi, "_").toLowerCase()}.${extension}`;
 
-  // Ajout d'un timestamp si spécifié
-  if (includeMetadata) {
-    a.download = `${a.download.replace(`.${extension}`, "")}_${new Date().toISOString().slice(0, 10)}.${extension}`;
+  try {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    const sanitizedFileName = fileName
+      .replace(/[^a-z0-9]/gi, "_")
+      .toLowerCase();
+    a.download = `${sanitizedFileName}_${new Date().toISOString().split("T")[0]}.${extension}`;
+
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    return {
+      success: true,
+      format,
+      fileName: a.download,
+    };
+  } catch (error) {
+    console.error("Export error:", error);
+    throw new Error(error instanceof Error ? error.message : "Export failed");
   }
-
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-
-  return {
-    success: true,
-    format,
-    fileName: a.download,
-  };
 }
