@@ -1,9 +1,15 @@
 <script setup lang="ts">
   import type { CreateDocumentDTO } from '@notionkiller/shared'
   import { marked } from "marked";
+  import DOMPurify from 'dompurify'
+
   const isOpen = ref(false)
   const toast = useToast()
 
+  marked.setOptions({
+    breaks: true,  // Ajoute des sauts de ligne
+    gfm: true,     // GitHub Flavored Markdown
+  })
   const document = ref<CreateDocumentDTO>({
     title: '',
     content: ''
@@ -34,7 +40,6 @@
 
     document.value.content = before + prefix + selection + suffix + after
 
-    // Remet le focus et la sélection
     nextTick(() => {
       textarea.focus()
       textarea.selectionStart = start + prefix.length
@@ -79,8 +84,9 @@
     try {
       const API_URL = import.meta.env.VITE_API_URL
       const token = useCookie('auth-token').value
+      console.log(token)
 
-      const response = await $fetch(`${API_URL}/api/documents`, {
+      const response = await $fetch(`${API_URL}/documents`, {
         method: 'POST',
         body: document.value,
         headers: {
@@ -108,10 +114,10 @@
   }
 
   const preview = computed(() => {
-    return marked(document.value.content)
+    return DOMPurify.sanitize(marked(document.value.content))
   })
 
-defineExpose({ openModal })
+  defineExpose({ openModal })
 </script>
 
 <template>
@@ -119,7 +125,7 @@ defineExpose({ openModal })
     <UCard>
       <template #header>
         <div class="flex items-center justify-between">
-          <h3 class="text-lg font-semibold text-gray-900">Create New Document</h3>
+          <h3 class="text-lg font-semibold text-white">Create New Document</h3>
           <UButton
               color="gray"
               variant="ghost"
@@ -166,9 +172,10 @@ defineExpose({ openModal })
           <!-- Preview Panel -->
           <div class="border rounded-lg p-4">
             <div class="text-sm text-gray-500 mb-2">Preview</div>
-            <div class="prose prose-sm max-w-none">
-              {{ preview }}
-            </div>
+            <div
+                class="prose prose-sm max-w-none dark:prose-invert"
+                v-html="preview"
+            ></div>
           </div>
         </div>
 
@@ -195,7 +202,43 @@ defineExpose({ openModal })
     max-width: none;
   }
 
-  .markdown-toolbar button {
-    @apply p-1 hover:bg-gray-100 rounded;
+  .prose h1 {
+    @apply text-2xl font-bold mb-4;
+  }
+
+  .prose h2 {
+    @apply text-xl font-bold mb-3;
+  }
+
+  .prose h3 {
+    @apply text-lg font-bold mb-2;
+  }
+
+  .prose p {
+    @apply mb-4;
+  }
+
+  .prose ul {
+    @apply list-disc pl-5 mb-4;
+  }
+
+  .prose ol {
+    @apply list-decimal pl-5 mb-4;
+  }
+
+  .prose code {
+    @apply bg-gray-100 rounded px-1 py-0.5 text-sm;
+  }
+
+  .prose pre {
+    @apply bg-gray-100 rounded p-3 mb-4;
+  }
+
+  .prose blockquote {
+    @apply border-l-4 border-gray-300 pl-4 italic;
+  }
+
+  .prose a {
+    @apply text-primary-600 hover:underline;
   }
 </style>
