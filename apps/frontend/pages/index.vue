@@ -90,7 +90,6 @@ const stats = [
   >
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-20">
-        <!-- Logo -->
         <div class="flex-shrink-0">
           <a
             href="/"
@@ -145,14 +144,12 @@ const stats = [
   <div class="relative flex items-center overflow-hidden">
     <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-        <!-- Contenu texte -->
         <div class="space-y-10 z-10">
           <h1
             class="text-6xl font-bold tracking-tight text-gray-900 dark:text-white"
           >
             NotionKiller
             <span class="block mt-2 h-20">
-              <!-- Hauteur fixe pour éviter les sauts -->
               <span class="text-primary-600 dark:text-primary-400 typing-text">
                 {{ currentText }}<span class="cursor">|</span>
               </span>
@@ -344,85 +341,6 @@ const stats = [
       </div>
     </div>
   </section>
-
-  <!-- Footer -->
-  <footer
-    class="bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800"
-  >
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div class="grid md:grid-cols-4 gap-8">
-        <!-- Brand -->
-        <div>
-          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">
-            NotionKiller
-          </h3>
-          <p class="text-gray-600 dark:text-gray-300">
-            Your all-in-one workspace for notes, tasks, and collaboration.
-          </p>
-        </div>
-
-        <!-- Quick Links -->
-        <div>
-          <h4 class="font-medium text-gray-900 dark:text-white mb-4">
-            Quick Links
-          </h4>
-          <ul class="space-y-2">
-            <li
-              v-for="link in ['Features', 'Pricing', 'Blog', 'About']"
-              :key="link"
-            >
-              <a
-                href="#"
-                class="text-gray-600 dark:text-gray-300 hover:text-primary-500 dark:hover:text-primary-400"
-              >
-                {{ link }}
-              </a>
-            </li>
-          </ul>
-        </div>
-
-        <!-- Legal -->
-        <div>
-          <h4 class="font-medium text-gray-900 dark:text-white mb-4">Legal</h4>
-          <ul class="space-y-2">
-            <li v-for="link in ['Privacy', 'Terms', 'Security']" :key="link">
-              <a
-                href="#"
-                class="text-gray-600 dark:text-gray-300 hover:text-primary-500 dark:hover:text-primary-400"
-              >
-                {{ link }}
-              </a>
-            </li>
-          </ul>
-        </div>
-
-        <!-- Social -->
-        <div>
-          <h4 class="font-medium text-gray-900 dark:text-white mb-4">
-            Connect
-          </h4>
-          <div class="flex space-x-4">
-            <UButton
-              v-for="social in ['twitter', 'github', 'linkedin']"
-              :key="social"
-              color="gray"
-              variant="ghost"
-              :icon="`i-simple-icons-${social}`"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div
-        class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800 text-center text-gray-600 dark:text-gray-300"
-      >
-        <p>
-          &copy; {{ new Date().getFullYear() }} NotionKiller. All rights
-          reserved.
-        </p>
-      </div>
-    </div>
-  </footer>
 </template>
 
 <style scoped>
