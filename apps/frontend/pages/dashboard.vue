@@ -29,7 +29,6 @@
     }).length
   }));
 
-  // Filtres et tri
   const filteredAndSortedDocuments = computed(() => {
     let docs = documents.value.filter((doc) =>
         doc.title.toLowerCase().includes(searchQuery.value.toLowerCase())
@@ -84,11 +83,12 @@
   }
 
   async function onBulkDelete() {
-    if (await handleBulkDelete(selectedDocuments)) {
+    if (await handleBulkDelete(selectedDocuments.value)) {
       await fetchDocuments()
-      selectedDocuments.clear()
+      selectedDocuments.value.clear()
     }
   }
+
   async function onBulkExport() {
     const selectedDocs = documents.value.filter(doc => selectedDocuments.has(doc.id))
     await handleBulkExport(selectedDocs)

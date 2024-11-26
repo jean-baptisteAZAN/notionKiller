@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: notionkiller
+      POSTGRES_PASSWORD: notionkillerpass
+      POSTGRES_DB: notionkiller
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U notionkiller"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    environment:
+      DATABASE_URL: postgres://notionkiller:notionkillerpass@postgres:5432/notionkiller
+      JWT_SECRET: secret
+      NODE_ENV: production
+    ports:
+      - "8000:8000"  # Exposé sur le host maintenant
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - internal
+
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+    environment:
+      NODE_ENV: production
+      # URL pour les appels serveur-à-serveur
+      NUXT_API_URL: http://backend:8000
+      # URL pour les appels client (via le host)
+      NUXT_PUBLIC_API_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge
+
+volumes:
+  postgres_data:
