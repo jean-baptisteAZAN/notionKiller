@@ -1,8 +1,9 @@
 export interface User {
-    id?: number;
-    name: string;
+    id: number;
     email: string;
-    password: string;
+    name: string;
+    created_at: Date;
+    updated_at: Date;
 }
 
 export interface LoginDTO {

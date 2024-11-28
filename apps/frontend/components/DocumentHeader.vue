@@ -1,6 +1,9 @@
 <script setup lang="ts">
   import type { Document } from "@notionkiller/shared/types";
   import { formatDate } from "@/utils/formatDate";
+  import ShareDocumentModal from '~/components/documents/ShareDocumentModal.vue';
+
+  const isShareModalOpen = ref(false);
 
   defineProps<{
     document: Document;
@@ -133,6 +136,11 @@
               icon: 'i-heroicons-arrow-down-tray',
               click: () => (showExportModal = true),
             },
+            {
+              label: 'Share',
+              icon: 'i-heroicons-share',
+              click: () => isShareModalOpen = true,
+            },
           ],
           [
             {
@@ -246,6 +254,11 @@
         </div>
       </UCard>
     </UModal>
+    <ShareDocumentModal
+        v-model="isShareModalOpen"
+        :document-id="document.id"
+        @close="isShareModalOpen = false"
+    />
   </div>
 </template>
 

@@ -64,22 +64,51 @@ export function useBulkActions() {
     }
 
     async function handleBulkExport(documents: Document[]) {
-        if (!documents) return []
-        selectedDocumentsList.value = documents.filter(doc => selectedDocumentsIds.value.has(doc.id))
-        return selectedDocumentsList.value
-    }
+        try {
+            isBulkProcessing.value = true;
+            const JSZip = (await import('jszip')).default;
+            const zip = new JSZip();
+            documents.forEach((doc) => {
+                const htmlContent = `
+                <html>
+                    <head><title>${doc.title}</title></head>
+                    <body>${doc.content}</body>
+                </html>`;
+                zip.file(`${doc.title}.html`, htmlContent);
+            });
+            const blob = await zip.generateAsync({ type: "blob" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'documents-export.zip';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
 
-    function updateSelectedDocuments(documents: Document[]) {
-        if (!documents) return
-        selectedDocumentsList.value = documents.filter(doc => selectedDocumentsIds.value.has(doc.id))
+            toast.add({
+                title: 'Success',
+                description: `${documents.length} documents exported successfully`,
+                icon: 'i-heroicons-check-circle',
+                color: 'green'
+            });
+        } catch (error) {
+            console.error('Export error:', error);
+            toast.add({
+                title: 'Error',
+                description: 'Failed to export documents',
+                icon: 'i-heroicons-x-circle',
+                color: 'red'
+            });
+        } finally {
+            isBulkProcessing.value = false;
+        }
     }
-
     return {
         handleBulkDelete,
         handleBulkExport,
         isBulkProcessing,
         selectedDocuments: selectedDocumentsIds,
         selectedDocumentsList,
-        updateSelectedDocuments
     }
 }

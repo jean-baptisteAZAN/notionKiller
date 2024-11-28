@@ -5,16 +5,18 @@ import { LoginDTO, RegisterDTO, AuthResponse } from "@notionkiller/shared/types"
 
 export class AuthService {
     static async register(data: RegisterDTO): Promise<AuthResponse> {
-        const hashedPassword = await hashPassword(data.password)
-
-        const [user] = await sql`
-      INSERT INTO users (email, password, name)
-      VALUES (${data.email}, ${hashedPassword}, ${data.name})
-      RETURNING id, email, name`
-
-        const token = generateToken({ id: user.id, email: user.email })
-
-        return { token }
+        try {
+            const hashedPassword = await hashPassword(data.password)
+            const [user] = await sql`
+                INSERT INTO users (email, password, name)
+                VALUES (${data.email}, ${hashedPassword}, ${data.name})
+                RETURNING id, email, name
+            `
+            const token = generateToken({ id: user.id, email: user.email })
+            return { token }
+        } catch (error) {
+            throw error
+        }
     }
 
     static async login(data: LoginDTO): Promise<AuthResponse> {

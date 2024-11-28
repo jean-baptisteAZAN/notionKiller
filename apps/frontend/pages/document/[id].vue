@@ -14,11 +14,11 @@
 
   const route = useRoute();
   const router = useRouter();
+  const isShareModalOpen = ref(false);
   const documentId = route.params.id as string;
 
   const { notifySuccess, notifyError } = useNotifications();
-  const { document, isLoading, fetchDocument, saveDocument, deleteDocument } =
-    useDocument(documentId);
+  const { document, isLoading, fetchDocument, saveDocument, deleteDocument } = useDocument(documentId);
 
   const { editedContent, renderedMarkdown, insertMarkdown } = useMarkdown();
 
