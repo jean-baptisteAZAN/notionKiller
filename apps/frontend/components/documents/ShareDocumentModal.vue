@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useDocumentShare } from '~/composables/useDocumentShare';
+import type { SharedUser } from "~/composables/useDocumentShare";
 
 const props = defineProps<{
   documentId: number;
@@ -13,7 +14,7 @@ const emit = defineEmits<{
 }>();
 
 
-const { sharedUsers, isLoading, shareDocument, removeShare, fetchSharedUsers } = useDocumentShare();
+const { sharedUsers, isLoading, shareDocument, removeShare, fetchSharedUsers, updatePermission } = useDocumentShare();
 const userEmail = ref('');
 const permission = ref('write')
 
@@ -25,15 +26,12 @@ const isOpen = computed({
   }
 });
 
-
 onMounted(() => {
   fetchSharedUsers(props.documentId);
 });
 
 async function handleShare() {
-
   if (!userEmail.value) return;
-
   try {
     await shareDocument(props.documentId, userEmail.value, permission.value);
     userEmail.value = '';
@@ -53,9 +51,9 @@ async function handleShare() {
   }
 }
 
-async function handleRemoveShare(userId: number) {
+async function handleRemoveShare(user) {
   try {
-    await removeShare(props.documentId, userId);
+    await removeShare(props.documentId, user.user_id);
     useToast().add({
       title: 'Success',
       description: 'Share removed successfully',
@@ -66,6 +64,25 @@ async function handleRemoveShare(userId: number) {
     useToast().add({
       title: 'Error',
       description: 'Failed to remove share',
+      icon: 'i-heroicons-x-circle',
+      color: 'red',
+    });
+  }
+}
+
+async function handlePermissionChange(userId: number, newPermission: 'read' | 'write') {
+  try {
+    await updatePermission(props.documentId, userId, newPermission);
+    useToast().add({
+      title: 'Success',
+      description: 'Permission updated successfully',
+      icon: 'i-heroicons-check-circle',
+      color: 'green',
+    });
+  } catch (error) {
+    useToast().add({
+      title: 'Error',
+      description: 'Failed to update permission',
       icon: 'i-heroicons-x-circle',
       color: 'red',
     });
@@ -114,8 +131,7 @@ async function handleRemoveShare(userId: number) {
         <div v-if="sharedUsers.length > 0" class="mt-4">
           <h4 class="text-sm font-medium text-gray-500 mb-2">Shared with</h4>
           <ul class="space-y-2">
-            <li
-                v-for="user in sharedUsers"
+            <li v-for="user in sharedUsers"
                 :key="user.id"
                 class="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded-lg"
             >
@@ -123,13 +139,24 @@ async function handleRemoveShare(userId: number) {
                 <p class="font-medium">{{ user.name }}</p>
                 <p class="text-sm text-gray-500">{{ user.email }}</p>
               </div>
-              <UButton
-                  color="red"
-                  variant="ghost"
-                  icon="i-heroicons-trash"
-                  :loading="isLoading"
-                  @click="handleRemoveShare(user.id)"
-              />
+              <div class="flex items-center gap-2">
+                <USelect
+                    :model-value="user.permission_level"
+                    :options="[
+                    { label: 'Can edit', value: 'write' },
+                    { label: 'Can view', value: 'read' }
+                ]"
+                    @update:model-value="(value) => handlePermissionChange(user.user_id, value)"
+                    class="w-32"
+                />
+                <UButton
+                    color="red"
+                    variant="ghost"
+                    icon="i-heroicons-trash"
+                    :loading="isLoading"
+                    @click="handleRemoveShare(user)"
+                />
+              </div>
             </li>
           </ul>
         </div>

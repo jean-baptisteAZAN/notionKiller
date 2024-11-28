@@ -32,18 +32,22 @@ export class DocumentCollaboratorService {
         ownerId: number,
         collaboratorId: number
     ): Promise<boolean> {
-        const result = await sql`
-            WITH doc_check AS (
-                SELECT 1 FROM documents
-                WHERE id = ${documentId} AND owner_id = ${ownerId}
-            )
+        const [existing] = await sql`
+        SELECT * FROM document_collaborators 
+        WHERE document_id = ${documentId} AND user_id = ${collaboratorId}
+    `;
+
+        if (existing) {
+            const result = await sql`
             DELETE FROM document_collaborators
             WHERE document_id = ${documentId}
-              AND user_id = ${collaboratorId}
-              AND EXISTS (SELECT 1 FROM doc_check)
-            RETURNING id
-        `
-        return result.length > 0
+            AND user_id = ${collaboratorId}
+            RETURNING *
+        `;
+            return result.length > 0;
+        }
+
+        return false;
     }
 
     static async getCollaborators(documentId: number, userId: number) {
@@ -62,5 +66,32 @@ export class DocumentCollaboratorService {
                     OR dc.user_id = ${userId})
             )
         `
+    }
+
+    static async updateCollaborator(
+        documentId: number,
+        ownerId: number,
+        collaboratorId: number,
+        permissionLevel: 'read' | 'write'
+    ): Promise<DocumentCollaborator | null> {
+        const [isOwner] = await sql`
+        SELECT 1 FROM documents
+        WHERE id = ${documentId} AND owner_id = ${ownerId}
+    `
+        if (!isOwner) return null
+
+        const [collaborator] = await sql<DocumentCollaborator>`
+        UPDATE document_collaborators
+        SET permission_level = ${permissionLevel}
+        WHERE document_id = ${documentId}
+          AND user_id = ${collaboratorId}
+          AND EXISTS (
+            SELECT 1 FROM documents
+            WHERE id = ${documentId}
+            AND owner_id = ${ownerId}
+          )
+        RETURNING *
+    `
+        return collaborator
     }
 }

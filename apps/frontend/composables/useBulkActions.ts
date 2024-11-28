@@ -104,6 +104,7 @@ export function useBulkActions() {
             isBulkProcessing.value = false;
         }
     }
+
     return {
         handleBulkDelete,
         handleBulkExport,

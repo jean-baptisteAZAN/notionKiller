@@ -34,21 +34,55 @@ export class DocumentCollaboratorController {
 
     static async removeCollaborator(c: Context) {
         try {
-            const documentId = parseInt(c.req.param('id'))
-            const collaboratorId = parseInt(c.req.param('userId'))
-            const user = c.get('user')
+            const documentId = parseInt(c.req.param('id'));
+            const collaboratorId = parseInt(c.req.param('userId'));
+            const user = c.get('user');
+
+            console.log('Debug - Parsed values:', {
+                documentId,
+                collaboratorId,
+                userId: user.id
+            });
+            if (isNaN(documentId) || isNaN(collaboratorId)) {
+                return c.json({ message: 'Invalid IDs provided' }, 400);
+            }
 
             const removed = await DocumentCollaboratorService.removeCollaborator(
                 documentId,
                 user.id,
                 collaboratorId
-            )
+            );
 
             if (!removed) {
+                return c.json({ message: 'Document not found or permission denied' }, 404);
+            }
+
+            return c.json({ message: 'Collaborator removed successfully' });
+        } catch (error) {
+            console.error('Error in removeCollaborator:', error);
+            return c.json({ message: error.message }, 400);
+        }
+    }
+
+    static async updateCollaborator(c: Context) {
+        try {
+            const documentId = parseInt(c.req.param('id'))
+            const collaboratorId = parseInt(c.req.param('userId'))
+            const user = c.get('user')
+            const { permission_level } = await c.req.json()
+
+            const updated = await DocumentCollaboratorService.updateCollaborator(
+                documentId,
+                user.id,
+                collaboratorId,
+                permission_level
+            )
+
+            if (!updated) {
                 return c.json({ message: 'Document not found or permission denied' }, 404)
             }
 
-            return c.json({ message: 'Collaborator removed successfully' })
+            return c.json(updated)
         } catch (error) {
             return c.json({ message: error.message }, 400)
         }

@@ -90,8 +90,11 @@
   }
 
   async function onBulkExport() {
-    await handleBulkExport(selectedDocuments.value)
-    selectedDocuments.value.clear()
+    const docsToExport = filteredAndSortedDocuments.value.filter(doc =>
+        selectedDocuments.value.has(doc.id)
+    );
+    await handleBulkExport(docsToExport);
+    selectedDocuments.value.clear();
   }
 
   onMounted(fetchDocuments);

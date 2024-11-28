@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 
-interface SharedUser {
+export interface SharedUser {
     id: number;
     email: string;
     name: string;
@@ -65,11 +65,30 @@ export function useDocumentShare() {
         }
     };
 
+    const updatePermission = async (documentId: number, userId: number, permission: 'read' | 'write') => {
+        try {
+            isLoading.value = true;
+            await $fetch(`${API_URL}/documents/${documentId}/collaborators/${userId}`, {
+                method: 'PUT',
+                body: { permission_level: permission },
+                headers: {
+                    Authorization: `Bearer ${cookie.value}`,
+                }
+            });
+            await fetchSharedUsers(documentId);
+        } catch (err) {
+            throw err;
+        } finally {
+            isLoading.value = false;
+        }
+    };
+
     return {
         sharedUsers,
         isLoading,
         shareDocument,
         removeShare,
         fetchSharedUsers,
+        updatePermission
     };
 }

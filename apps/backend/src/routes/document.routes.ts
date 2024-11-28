@@ -17,5 +17,8 @@ documents.delete('/:id', DocumentController.delete)
 documents.post('/:id/collaborators', DocumentCollaboratorController.addCollaborator)
 documents.get('/:id/collaborators', DocumentCollaboratorController.getCollaborators)
 documents.delete('/:id/collaborators/:userId', DocumentCollaboratorController.removeCollaborator)
+documents.put('/:id/collaborators/:userId', DocumentCollaboratorController.updateCollaborator)
+
+
 
 export default documents
